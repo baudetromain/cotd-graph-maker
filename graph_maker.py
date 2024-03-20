@@ -42,6 +42,19 @@ class RatelimitAwareRequestsWrapper():
         response = self.session.post(*args, **kwargs)
         self.__check_rate_limit(response)
         return response
+    
+
+class PlotWrapper():
+
+    def __init__(self):
+        match args.graph_type:
+            case 'scatter':
+                self.__plotter =  plt.scatter
+            case 'curve':
+                self.__plotter = plt.plot
+
+    def plot(self, *args, **kwargs):
+        self.__plotter(*args, **kwargs)
 
 
 headers = {
@@ -56,7 +69,19 @@ proxies = {
     "https": https_proxy
 }
 
+parser = argparse.ArgumentParser(prog='COTD graph maker',
+                    description='A program to generate a graph of the COTD placements of some players over time')
+
+parser.add_argument('-p', '--players', nargs='+', required=True,
+                    help='The list of the players for which the graph must be generated. At least one must be provided.')
+
+parser.add_argument('-t', '--graph-type', choices=['scatter', 'curve'], required=False, default='scatter',
+                    help='The plotting type to be made.')
+
+args = parser.parse_args()
+
 requestWrapper = RatelimitAwareRequestsWrapper()
+plotWrapper = PlotWrapper()
 
 
 def get_player_uuid(player):
@@ -73,14 +98,6 @@ def get_player_uuid(player):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='COTD graph maker',
-                        description='A program to generate a graph of the COTD placements of some players over time')
-
-    parser.add_argument('-p', '--players', nargs='+', required=True,
-                        help='The list of the players for which the graph must be generated. At least one must be provided.')
-
-    args = parser.parse_args()
-
     results = dict()
 
     for player in args.players:
@@ -107,7 +124,7 @@ def main():
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
 
     for player in results:
-        plt.plot(results[player]['dates'], results[player]['scores'], label=player)
+        plotWrapper.plot(results[player]['dates'], results[player]['scores'], label=player)
 
     plt.savefig('output.png')
 
