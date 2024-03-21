@@ -61,14 +61,6 @@ headers = {
     'User-Agent': 'github.com/baudetromain/cotd-graph-maker'
 }
 
-http_proxy  = "http://localhost:8080"
-https_proxy  = "http://localhost:8080"
-
-proxies = { 
-    "http"  : http_proxy,
-    "https": https_proxy
-}
-
 parser = argparse.ArgumentParser(prog='COTD graph maker',
                     description='A program to generate a graph of the COTD placements of some players over time')
 
@@ -86,7 +78,7 @@ plotWrapper = PlotWrapper()
 
 def get_player_uuid(player):
     url = f'https://trackmania.io/api/players/find?search={player}'
-    response = requestWrapper.get(url, headers=headers, proxies=proxies, verify=False)
+    response = requestWrapper.get(url, headers=headers)
     if response.status_code == 200:
         data = response.json()
         if len(data) == 0:
@@ -108,7 +100,7 @@ def main():
             data = {'cotds': [0]*25}
             while len(data['cotds']) == 25:
                 response = requestWrapper.get(f'https://trackmania.io/api/player/{uuid}/cotd/{req_count}?includeReruns=false',
-                                    headers=headers, proxies=proxies, verify=False)
+                                    headers=headers)
                 data = response.json()
                 req_count += 1
                 for cotd in data['cotds']:
